@@ -66,13 +66,14 @@ int main()
     printf("\n%lf", weight);
     // track_path(g, path, 1, 9);
     // 19
-    getBusLine(g,26);
+    printf("\n");
     int output[20];
-    int total=0;
-    total=getStation(g,10,output);
-    for(i=0; i<total; i++)
+    int k;
+    getBusline(g, 26);
+    k = getStation(g, 37, output);
+    for (i = 0; i < k; i++)
     {
-      printf("%d ",output[i]);
+        printf("%d ", output[i]);
     }
     printf("\n");
     return 0;
