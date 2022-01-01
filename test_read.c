@@ -70,10 +70,13 @@ int main(){
             int* path = (int*)malloc(sizeof(int)*(point+1));
             memset(path, -1, sizeof(path));
             double dis = shortest_path(g, src, des, path);
-            
-            printf("shortest distance: ");
-            printf("%0.2lf\n", dis);
-            track_path(g, path, src, des);
+            if(dis == INFINITE_VALUE){
+                printf("not found!\n");
+            }else{
+                printf("shortest distance: ");
+                printf("%0.2lf\n", dis);
+                track_path(g, path, src, des);
+            }
         }else{break;}
     }
     return 0;
