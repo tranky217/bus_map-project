@@ -24,27 +24,166 @@ void add_bus_v(graph g, int id, int sub_id, char* name);//
 //
 void readfile(graph g, char* filename, int* n);
 //
-// int extractmin(double dis[], int visited[], int total);
-// double shortest_path(graph g, int s, int d, int path[], int total);
-// void track_path(graph g, int path[], int s, int d);
-// // track path only print out the route from src to des 
-// // but not include src and des
-// int check_vertex(graph g, char* name, int* id);//return 0 when vertex existed
+int check(graph g, int s, int t);
+int extractmin(double dis[], int visited[]);
+double shortest_path(graph g, int s, int d, int path[]);
+void track_path(graph g, int path[], int s, int d);
+// track path only print out the route from src to des 
+// but not include src and des
+int check_vertex(graph g, char* name, int* id);//return 0 when vertex existed
 // return 1 otherwise
+void busline(graph g, int id);
+int go_through(graph g, int id, int out[]);
+//
+void menu();
 int main(){
+    menu();
     graph g = crt_graph();
-    int n = 0; // total number of vertices
-    readfile(g, "data.txt", &n);
-    //
-    JRB node;
-    printf("%d \n", n);
-    jrb_traverse(node, g.v){
-        printf("%d - %s\n", jval_i(node->key), jval_s(node->val));
+    int point = 0;
+    readfile(g, "data.txt", &point);
+    while(1){
+        int cmd;
+        printf("enter command: ");
+        scanf("%d", &cmd);
+        if(cmd == 1){
+            printf("enter bus id: ");
+            int bus_truck; scanf("%d", &bus_truck);
+            busline(g, bus_truck);
+        }else if(cmd == 2){
+            int out[10];
+            printf("enter station id: ");
+            int station; scanf("%d", &station);
+            int l = go_through(g, station, out);
+            if(l != 0){
+                for(int i = 0; i < l; i ++){
+                    printf("%d \n", out[i]);
+                }
+            }else{
+                printf("not found!\n");
+            }
+        }else if(cmd == 3){
+            printf("enter source id: ");
+            int src; scanf("%d", &src);
+            printf("enter destination id: ");
+            int des; scanf("%d", &des);
+
+            int* path = (int*)malloc(sizeof(int)*(point+1));
+            memset(path, -1, sizeof(path));
+            double dis = shortest_path(g, src, des, path);
+            
+            printf("shortest distance: ");
+            printf("%0.2lf\n", dis);
+            track_path(g, path, src, des);
+        }else{break;}
     }
-    // track_path(g, path, 1, 9);
     return 0;
 }
 // functions
+void menu(){
+    printf("MINI PROJECT 2\n");
+    printf("1. Show busline of a bus\n");
+    printf("2. Show buses at a bus station\n");
+    printf("3. Show the shortest path \n");
+    printf("4. Exit\n");
+}
+void track_path(graph g, int path[], int s, int d){
+    if(path[d] == s){
+        return ;
+    }
+    d = path[d];
+    track_path(g, path, s, d);
+    printf("%s\n", get_v(g, d));
+}
+int extractmin(double dis[], int visited[]){
+    int n = SIZE;
+    double min = INFINITE_VALUE;
+    int index = 0;
+    for(int i = 0; i < n; i++){
+        if(dis[i] < min && visited[i] == -1){
+            min = dis[i];
+            index = i;
+        }
+    }
+    return index;
+}
+int check(graph g, int s, int t){
+    JRB node2;
+    int exist1 = 0;
+    int exist2 = 0;
+    jrb_traverse(node2, g.v){
+        if(jval_i(node2->key) == s){ exist1 = 1;}
+        if(jval_i(node2->key) == t){ exist2 = 1;}
+    }
+    if(exist1*exist2 == 0){
+        return 0;
+    }
+    return 1;
+}
+double shortest_path(graph g, int s, int d, int path[]){
+    int flag = check(g, s, d);
+    if(flag == 0){
+        return INFINITE_VALUE;
+    }
+    double dis[SIZE]; 
+    for(int i = 0; i < SIZE ;i ++){
+        dis[i] = INFINITE_VALUE;
+    } dis[s] = 0;
+
+    path[s] = s;
+
+    int visited[SIZE]; 
+    memset(visited, -1, sizeof(visited));
+
+    int pq[SIZE]; memset(pq, -1, sizeof(pq));
+
+    JRB node; int n = 0; 
+    jrb_traverse(node, g.v){
+        pq[n++] = jval_i(node->key);
+    }
+    int k = n;
+    while(n != 0){
+        int u = extractmin(dis, visited);
+        visited[u] = 1;
+        pq[u] = -1; n --;
+        int adj[SIZE]; int l = get_adjacent(g, u, adj);
+        for(int i = 0; i < l; i++){
+            int v = adj[i];
+            double d_uv = dis[u] + get_edge_value(g, u, v);
+            if(dis[v] > d_uv){
+                dis[v] = d_uv;
+                path[v] = u;
+            }
+        }
+    }
+    return dis[d];
+}
+int go_through(graph g, int id, int out[]){
+    int total = 0;
+    JRB node;
+    jrb_traverse(node, g.busline){
+        JRB sub_node;
+        JRB subtree = (JRB)jval_v(node->val);
+        jrb_traverse(sub_node, subtree){
+            if(jval_i(sub_node->key) == id){
+                out[total++] = jval_i(node->key);
+            }
+        }
+    }
+    return total;
+}
+void busline(graph g, int id){
+    JRB node = jrb_find_int(g.busline, id);
+    if(node != NULL){
+        JRB subtree = (JRB)jval_v(node->val);
+        JRB subnode;
+        jrb_traverse(subnode, subtree){
+            printf("%s - %d\n", jval_s(subnode->val), jval_i(subnode->key));
+        }
+    }else {
+        printf("not found!\n");
+    }
+    printf("\n");
+}
 void readfile(graph g, char* filename, int* n){
     FILE* file = fopen(filename, "r");
     double dis = 0;
@@ -62,25 +201,27 @@ void readfile(graph g, char* filename, int* n){
             char* tmp = (char*)malloc(SIZE*sizeof(char));
             fgets(tmp, SIZE, file);
             tmp[strlen(tmp)-2] = '\0';
-            // v_id = -1;
             if(check_vertex(g, tmp, &v_id)){
-                station_number ++;
-                add_bus_v(g, car_id, station_number, tmp);
                 add_v(g, station_number, tmp);
+                add_bus_v(g, car_id, station_number, tmp);
                 v_id = station_number;
+                station_number ++;
+            }else{
+                add_bus_v(g, car_id, v_id, tmp);
             }
             // read next busline stop    
             c = getc(file);
             char* tmp1 = (char*)malloc(SIZE*sizeof(char));
             fgets(tmp1, SIZE, file);
             tmp1[strlen(tmp1)-2] = '\0';
-            // v_id1 = -1;
             if(check_vertex(g, tmp1, &v_id1)){
-                station_number ++;
-                v_id1 = station_number;
-                add_bus_v(g, car_id, station_number, tmp1);
                 add_v(g, station_number, tmp1);
-            } 
+                add_bus_v(g, car_id, station_number, tmp1);
+                v_id1 = station_number;
+                station_number ++;
+            }else{ 
+                add_bus_v(g, car_id, v_id1, tmp1);
+            }
         }else if(c == '-'){
             fscanf(file, "%lf", &dis);
             add_e(g, v_id, v_id1, dis);
