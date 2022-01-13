@@ -4,7 +4,7 @@
 #include<ctype.h>
 #include "jrb.h"
 #include "jval.h"
-#define SIZE 200
+#define SIZE 250
 #define INFINITE_VALUE 1000
 // define structure
 typedef struct{
@@ -70,13 +70,10 @@ int main(){
             int* path = (int*)malloc(sizeof(int)*(point+1));
             memset(path, -1, sizeof(path));
             double dis = shortest_path(g, src, des, path);
-            if(dis == INFINITE_VALUE){
-                printf("not found!\n");
-            }else{
-                printf("shortest distance: ");
-                printf("%0.2lf\n", dis);
-                track_path(g, path, src, des);
-            }
+            
+            printf("shortest distance: ");
+            printf("%0.2lf\n", dis);
+            track_path(g, path, src, des);
         }else{break;}
     }
     return 0;
@@ -96,6 +93,14 @@ void track_path(graph g, int path[], int s, int d){
     d = path[d];
     track_path(g, path, s, d);
     printf("%s\n", get_v(g, d));
+    int* out = (int*)malloc(sizeof(int)*SIZE);
+    int l = go_through(g, d, out);
+    for(int i = 0;i < l; i ++){
+        if(i != l-1)
+        printf("%d - ", out[i]);
+        else
+        printf("%d \n", out[i]);
+    }
 }
 int extractmin(double dis[], int visited[]){
     int n = SIZE;
